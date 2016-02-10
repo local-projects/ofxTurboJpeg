@@ -11,57 +11,40 @@ public:
 
 	ofxTurboJpeg();
 	~ofxTurboJpeg();
-    
-    template <class T>
-    unsigned char * compress( T & img, int jpegQuality, unsigned long *size){
-        
-        if (img.getWidth() == 0) return NULL;
-        
-        int pitch = 0, flags = 0, jpegsubsamp = 0;
-        *size = 0;
-        
-        unsigned int bpp = img.getPixels().getNumChannels();
-        
-        unsigned char * output = (unsigned char*) malloc ( sizeof(char) *  img.getWidth() * img.getHeight() * bpp );
-        tjCompress(handleCompress, img.getPixels().getData() , img.getWidth(), pitch, img.getHeight(), bpp, output, size, jpegsubsamp, jpegQuality, flags);
-        
-        return output;
-    }
-    
-    void save( ofImage * img, string path, int jpegQuality );
+
+	void save(ofImage* img, string path, int jpegQuality = 90);
 	void save(string path, const ofPixels& img, int jpegQuality = 90);
+	void save(string path, ofImage& img, int jpegQuality = 90);
 
-	void save(string path, ofImage& img, int jpegQuality = 90)
-	{
-		save(path, img.getPixels(), jpegQuality);
-	}
-	
 	bool load(string path, ofPixels &pix);
+	bool load(string path, ofImage &img);
 	bool load(const ofBuffer& buf, ofPixels &pix);
+	bool load(const ofBuffer& buf, ofImage &img);
 
-	bool load(string path, ofImage &img)
+	template <class T>
+	unsigned char* compress(T& img, int jpegQuality, unsigned long* size)
 	{
-		ofPixels pix;
-		if (!load(path, pix)) return false;
+		if (img.getWidth() == 0) return NULL;
 
-		img.setFromPixels(pix);
-		return true;
-	}
-	
-	bool load(const ofBuffer& buf, ofImage &img)
-	{
-		ofPixels pix;
-		if (!load(buf, pix)) return false;
+		int pitch = 0, flags = 0, jpegsubsamp = 0;
+		*size = 0;
 
-		img.setFromPixels(pix);
-		return true;
+		unsigned int bpp = img.getPixels().getNumChannels();
+
+		int w = img.getWidth();
+		int h = img.getHeight();
+		unsigned char* data = img.getPixels().getData();
+
+		unsigned char* output = (unsigned char*) malloc(sizeof(char) * w * h * bpp);
+		tjCompress(handleCompress, data, w, pitch, h, bpp,
+				   output, size, jpegsubsamp, jpegQuality, flags);
+
+		return output;
 	}
-	
-	
+
 private:
+	void save(ofBuffer &buf, const ofPixels& img, int jpegQuality = 90);
 
 	tjhandle handleCompress;
 	tjhandle handleDecompress;
-
-    void save(ofBuffer &buf, const ofPixels& img, int jpegQuality = 90);
 };
